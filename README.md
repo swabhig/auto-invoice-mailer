@@ -1,3 +1,5 @@
+Please note: this is an internal-to-use tool. Might not show results as expected. Added as a repo just to collate projects here.
+
 To get started - https://auto-invoice-mailer.netlify.app/
 
 # Monthly Invoice Automation
