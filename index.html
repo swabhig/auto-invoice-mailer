@@ -213,7 +213,7 @@
     setStatus('running', 'Starting the run — matching accounts, sending invoices, tallying totals…');
 
     try {
-      const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+      const res = await fetch(WEBHOOK_URL);
       if (!res.ok) throw new Error('Webhook responded with status ' + res.status);
 
       setStatus('success', 'Run started successfully. A summary will land in your inbox shortly.');
