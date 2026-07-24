@@ -1,3 +1,5 @@
+To get started - https://auto-invoice-mailer.netlify.app/
+
 # Monthly Invoice Automation
 
 Automates the monthly invoice send-out: matches each account to its invoice PDF, sends it to the right finance contact, flags overdue accounts, and emails a summary when done. Runs entirely on your own Google account (Sheets, Drive, Gmail) — no company backend involved.
