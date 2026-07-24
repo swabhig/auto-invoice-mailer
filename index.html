@@ -1,4 +1,30 @@
 <!doctype html>
+<!--
+  Invoice Automation — Run Control page.
+
+  What this page does:
+  This is a static trigger page for the "Monthly Invoice Automation" n8n workflow.
+  Clicking the button navigates directly to the n8n webhook URL (a plain GET link,
+  not a fetch() call). This starts the workflow and shows a short confirmation
+  message in the browser tab. Single click, no confirmation step.
+
+  Why a link, not a fetch() call:
+  An earlier version called the n8n webhook using fetch(). That failed due to a
+  CORS/registration issue. A plain link avoids CORS entirely — it's a normal page
+  navigation, not a cross-origin background request.
+
+  Why this specific webhook URL has no custom path segment:
+  Earlier webhook attempts added a custom path on top of the auto-generated ID
+  (e.g. ".../webhook/<id>/run-invoice-automation"). Those consistently failed to
+  register on n8n Cloud, even when the workflow showed as active/published.
+  Using ONLY the auto-generated webhook ID as the route (no custom path) is what
+  reliably works — confirmed by direct testing. Do not add a custom path to this
+  node without re-testing the resulting URL first.
+
+  n8n side reference:
+  - Workflow: "Monthly Invoice Automation" (n8n workflow ID: YzwDtZJQurk2bl2Q)
+  - Trigger node: "Trigger Webhook" (the only external trigger node in the workflow)
+-->
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -7,6 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* Color palette — a "ledger paper" theme for a billing-ops tool */
   :root {
     --paper: #FAF7F0;
     --paper-line: #DED6C4;
@@ -14,8 +41,6 @@
     --ink-soft: #6B6455;
     --ledger: #1F5C4B;
     --ledger-dark: #164539;
-    --warn: #A8501F;
-    --stamp-red: #A3312A;
   }
 
   * { box-sizing: border-box; }
@@ -36,6 +61,7 @@
     padding: 24px;
   }
 
+  /* Single centered card containing the whole page */
   .card {
     width: 100%;
     max-width: 480px;
@@ -87,7 +113,10 @@
     letter-spacing: 0.02em;
   }
 
-  button#runBtn {
+  /* Main call-to-action — a plain link styled as a button.
+     It is an <a> tag on purpose (see comment at top of file). */
+  a#runBtn {
+    display: block;
     width: 100%;
     background: var(--ledger);
     color: #fff;
@@ -98,76 +127,19 @@
     font-weight: 500;
     letter-spacing: 0.04em;
     text-transform: uppercase;
+    text-align: center;
+    text-decoration: none;
     cursor: pointer;
     transition: background 0.15s ease;
   }
 
-  button#runBtn:hover:not(:disabled) { background: var(--ledger-dark); }
-  button#runBtn:disabled { background: #B9B2A3; cursor: not-allowed; }
-
-  .status {
-    margin-top: 20px;
-    min-height: 76px;
-    font-size: 13px;
-    line-height: 1.6;
-  }
-
-  .status .line { display: flex; gap: 8px; align-items: flex-start; }
-  .status .dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    margin-top: 5px; flex-shrink: 0;
-    background: var(--ink-soft);
-  }
-  .status.running .dot { background: var(--ledger); animation: pulse 1.1s ease-in-out infinite; }
-  .status.error .dot { background: var(--stamp-red); }
-  .status.success .dot { background: var(--ledger); }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.7); }
-  }
-
-  .stamp-wrap {
-    position: relative;
-    height: 0;
-    overflow: visible;
-  }
-
-  .stamp {
-    position: absolute;
-    top: -18px;
-    right: 8px;
-    font-family: 'Source Serif 4', serif;
-    font-weight: 600;
-    font-size: 15px;
-    color: var(--ledger);
-    border: 2.5px solid var(--ledger);
-    padding: 4px 10px;
-    letter-spacing: 0.06em;
-    transform: rotate(-8deg) scale(0.6);
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  .stamp.show {
-    animation: stampIn 0.35s cubic-bezier(.2,1.4,.4,1) forwards;
-  }
-
-  @keyframes stampIn {
-    0% { transform: rotate(-8deg) scale(2.2); opacity: 0; }
-    60% { transform: rotate(-8deg) scale(0.92); opacity: 1; }
-    100% { transform: rotate(-8deg) scale(1); opacity: 1; }
-  }
+  a#runBtn:hover { background: var(--ledger-dark); }
 
   .footnote {
     margin-top: 24px;
     font-size: 10.5px;
     color: var(--ink-soft);
     line-height: 1.6;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    button#runBtn, .stamp, .status .dot { animation: none !important; transition: none !important; }
   }
 </style>
 </head>
@@ -183,47 +155,22 @@
       <span>ACCOUNT TRACKER · LIVE</span>
     </div>
 
-    <div class="stamp-wrap"><div class="stamp" id="stamp">SENT</div></div>
-    <button id="runBtn">Run Invoice Send</button>
-
-    <div class="status" id="status"></div>
+    <!--
+      Direct link to the n8n webhook (ID-only route, no custom path — see the
+      file-level comment for why that matters). One click starts the run
+      immediately, no confirmation step, no fetch()/CORS involved.
+    -->
+    <a id="runBtn" href="https://swabhig.app.n8n.cloud/webhook/51cc73b1-ba1f-4d28-8fa6-a5d5b2459674/" target="_blank" rel="noopener">Run Invoice Send</a>
 
     <p class="footnote">Runs against the live Account Tracker sheet and Drive invoice folder. Already-billed accounts are skipped automatically — safe to click more than once.</p>
   </div>
 
 <script>
-  const WEBHOOK_URL = 'https://swabhig.app.n8n.cloud/webhook/94e30dd4-b0d8-4dfa-af5e-588a2b20b053/run-invoice-automation';
-
-  const btn = document.getElementById('runBtn');
-  const statusEl = document.getElementById('status');
-  const stampEl = document.getElementById('stamp');
-  const monthLabel = document.getElementById('monthLabel');
-
+  // Only front-end logic on this page: show the current month/year in the header.
+  // There is no fetch/API call anywhere in this file.
   const now = new Date();
-  monthLabel.textContent = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
-
-  function setStatus(mode, html) {
-    statusEl.className = 'status ' + mode;
-    statusEl.innerHTML = `<div class="line"><span class="dot"></span><span>${html}</span></div>`;
-  }
-
-  btn.addEventListener('click', async () => {
-    btn.disabled = true;
-    stampEl.classList.remove('show');
-    setStatus('running', 'Starting the run — matching accounts, sending invoices, tallying totals…');
-
-    try {
-      const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
-      if (!res.ok) throw new Error('Webhook responded with status ' + res.status);
-
-      setStatus('success', 'Run started successfully. A summary will land in your inbox shortly.');
-      stampEl.classList.add('show');
-    } catch (err) {
-      setStatus('error', 'Could not reach the workflow. Check that it\'s published/active in n8n, then try again.');
-    } finally {
-      btn.disabled = false;
-    }
-  });
+  document.getElementById('monthLabel').textContent =
+    now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
 </script>
 
 </body>
