@@ -1,5 +1,4 @@
 Please note: this is an internal-to-use tool. Might not show results as expected. Added as a repo just to collate projects here.
-
 To get started - https://auto-invoice-mailer.netlify.app/
 
 # Monthly Invoice Automation
@@ -71,4 +70,6 @@ flowchart TD
 6. Publish the workflow (required for the trigger to work)
 7. Deploy `index.html` and update its `WEBHOOK_URL` to match
 
-Full detail: `docs/n8n_Invoice_Automation_Setup_Notes.docx`
+---
+
+Made by [Swabhi](https://www.linkedin.com/in/swabhi-gupta/)
